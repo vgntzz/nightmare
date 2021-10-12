@@ -1,0 +1,10 @@
+canvas{
+  border: black 1px solid;
+  border-radius: 10px;
+  width: 100%;
+  /* height: auto; */
+}
+textarea {
+  width: 100%;
+  resize: none;
+}

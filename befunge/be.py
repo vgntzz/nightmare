@@ -4,7 +4,7 @@ import os, random, pathlib
 # Befunge Program
 # ==================
 PATH_PROGRAM = pathlib.Path(__file__).parent / "main.be"        # Input Befunge FILE
-SIZE_PROGRAM = [20, 20]                                         # SIZE (rows, columns)
+SIZE_PROGRAM = [50, 50]                                         # SIZE (rows, columns)
 
 stack = list()  # Memory (stack)
 pc = [0, 0]     # Program counter
@@ -16,10 +16,25 @@ string_mode = False
 program_finished = False
 debug = False
 
-with open(PATH_PROGRAM, 'r') as f:
+# with open(PATH_PROGRAM, 'r') as f:
+#     lines = f.readlines()
+#     load_program(lines)
+
+def reset():
+    global stack, pc, step, program, real_program, string_mode, program_finished, debug
+    stack = list()  # Memory (stack)
+    pc = [0, 0]     # Program counter
+    step = [0, 1]   # Direction (step)
+    program = [[" "]*SIZE_PROGRAM[0] for x in range(SIZE_PROGRAM[1])]
+    real_program = []
+
+    string_mode = False
+    program_finished = False
+    debug = False
+
+def load_program(lines):
     line = True
     row = 0
-    lines = f.readlines()
     for _ in range(len(lines)):
         lines[_] = lines[_].replace("\n", "")
         line = lines[_]
@@ -33,11 +48,10 @@ with open(PATH_PROGRAM, 'r') as f:
             else: real_program[row][index] = char
         row += 1
 
-for row in program:
-    print(row)
-
-for row in real_program:
-    print(row)
+    # for row in program:
+    #     print(row)
+    # for row in real_program:
+    #     print(row)
 
 def add(*args):
     if len(stack) < 2: return
@@ -235,18 +249,21 @@ def next_step():
     pc = [pc[0] + step[0], pc[1] + step[1]]
     pc = [pc[0] % len(program), pc[1] % len(program)]
 
-while(not program_finished):
-    if debug: print(F"Program Counter - X: {pc[1]} Y: {pc[0]}")
-    instruction = program[pc[0]][pc[1]]
-    if(string_mode and not instruction == "\""):
-        push(instruction)
-    elif instruction in instructions:
-        if debug: print(f"Instruction: {instruction}")
-        instruction_func = instructions[instruction]
-        instruction_func(instruction)
-    next_step()
-    if debug and not program_finished: input("Continue?")
-print(stack)
+def execute():
+    while(not program_finished):
+        if debug: print(F"Program Counter - X: {pc[1]} Y: {pc[0]}")
+        instruction = program[pc[0]][pc[1]]
+        if(string_mode and not instruction == "\""):
+            push(instruction)
+        elif instruction in instructions:
+            if debug: print(f"Instruction: {instruction}")
+            instruction_func = instructions[instruction]
+            instruction_func(instruction)
+        next_step()
+        if debug and not program_finished: input("Continue?")
+    # print(stack)
+    return {"stack": stack, "program": program}
 
-for row in program:
-    print(row)
+def test():
+    for row in program:
+        print(row)
