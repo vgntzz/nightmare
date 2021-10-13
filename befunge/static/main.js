@@ -1,10 +1,10 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext('2d');
-// var real_program = [];
-// let ROWS = 50;
-// let COLS = 50;
 let gridSize = 24;
-let cameraPos = [0,0]
+let cameraPos = [25,25]
+let mouseX = 0;
+let mouseY = 0;
+
 // ==================
 // Befunge Program
 // ==================
@@ -23,34 +23,31 @@ for(var i=0; i<SIZE_PROGRAM[0]; i++) {
 let string_mode = false
 let program_finished = false
 let debug = false
+let interval;
 
-// for(var i=0; i<ROWS; i++) {
-//     real_program[i] = new Array(COLS);
-// }
-
-var drawGrid = function(ctx, w, h, step) {
+var drawGrid = function(ctx, w, h) {
     w = Math.floor(w / gridSize) * gridSize;
     h = Math.floor(h / gridSize) * gridSize;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath();
     clampedX = Math.max(0, -cameraPos[0]);
     clampedY = Math.max(0, -cameraPos[1]);
-    for (var x=0;x<=w;x+=step) {
-            desiredX = x-cameraPos[0];
-            ctx.moveTo(desiredX, clampedY);
-            ctx.lineTo(desiredX, h-cameraPos[1]);
+    for (var x=0;x<=w;x+=gridSize)
+    {
+      if(x < cameraPos[0] || -cameraPos[0] > canvas.width) continue;
+      desiredX = x-cameraPos[0];
+      ctx.moveTo(desiredX, clampedY);
+      ctx.lineTo(desiredX, h-cameraPos[1]);
     }
     ctx.strokeStyle = 'rgb(255,0,0)';
-    ctx.lineWidth = 1;
     ctx.stroke();
 
     ctx.beginPath();
-    for (var y=0;y<=h;y+=step) {
-            ctx.moveTo(clampedX, y-cameraPos[1]);
-            ctx.lineTo(w-cameraPos[0], y-cameraPos[1]);
+    for (var y=0;y<=h;y+=gridSize) {
+        if(y < cameraPos[1] || -cameraPos[1] > canvas.height) continue;
+        ctx.moveTo(clampedX, y-cameraPos[1]);
+        ctx.lineTo(w-cameraPos[0], y-cameraPos[1]);
     }
-    ctx.strokeStyle = 'rgb(20,20,20)';
-    ctx.lineWidth = 1;
     ctx.stroke();
     if(real_program.length){
       ctx.fillStyle = 'rgb(0,0,255)';
@@ -71,35 +68,39 @@ document.addEventListener('keydown', function (event) {
   if(event.key == "q")
     stepDraw(1);
 
+  if (event.keyCode === 32) { // spacebar
+    cameraPos[0] = pc[1] * gridSize + Math.round(gridSize/2) - Math.round(canvas.width / 2);
+    cameraPos[1] = pc[0] * gridSize + Math.round(gridSize/2) - Math.round(canvas.height / 2);
+    draw();
+    event.preventDefault();
+  }
+
   if (event.keyCode === 39) { // right arrow
     cameraPos[0] += speed;
-    drawGrid(ctx, program[0].length * gridSize, program.length * gridSize, gridSize);
-    drawContent();
+    draw();
   }
 
   if (event.keyCode === 37) { // left arrow
     cameraPos[0] -= speed;
-    drawGrid(ctx, program[0].length * gridSize, program.length * gridSize, gridSize);
-    drawContent();
+    draw();
   }
 
   if (event.keyCode === 38) { // up arrow
     cameraPos[1] -= speed;
-    drawGrid(ctx, program[0].length * gridSize, program.length * gridSize, gridSize);
-    drawContent();
+    draw();
     event.preventDefault();
   }
 
   if (event.keyCode === 40) { // down arrow
     cameraPos[1] += speed;
-    drawGrid(ctx, program[0].length * gridSize, program.length * gridSize, gridSize);
-    drawContent();
+    draw();
     event.preventDefault();
   }
 });
 
 var drawContent = function(){
   ctx.font = `${gridSize-2}px Calibri`;
+  ctx.fillStyle = "rgb(255,255,255)";
   for (var i = 0; i < real_program.length; i++) {
     for (var j = 0; j < real_program[i].length; j++) {
       var width = ctx.measureText(real_program[i][j]).width;
@@ -111,16 +112,7 @@ var drawContent = function(){
   }
 }
 
-// for (var i = 0; i < real_program.length; i++) {
-//   for (var j = 0; j < real_program[i].length; j++) {
-//     real_program[i][j] = "a";
-//   }
-// }
-
-
-drawGrid(ctx, program[0].length * gridSize, program.length * gridSize, gridSize);
-
-// ctx.font = `8px Calibri`;
+drawGrid(ctx, program[0].length * gridSize, program.length * gridSize);
 
 var reset = function()
 {
@@ -136,9 +128,6 @@ var reset = function()
     program_finished = false
     debug = false
 }
-// real_program[0] = new Array(10);
-// console.log(program);
-// console.log(real_program);
 
 var load_program = function(lines){
 
@@ -206,13 +195,13 @@ var mod = function(args){
 var lnot = function(args){
     if(stack.length < 1) return
     a = stack.pop()
-    stack.push(int(!a))
+    stack.push((!a)|0)
   }
 
 var gt = function(args){
     if(stack.length < 2) return
     [a, b] = pop_two()
-    stack.push(int(b>a))
+    stack.push((b>a)|0)
   }
 
 var dup = function(args){
@@ -235,13 +224,13 @@ var nop = function(args){
 var oi = function(args){
     if(stack.length < 1) return
     a = stack.pop()
-    document.getElementById("stackOutput").value += a;
+    document.getElementById("outputTxt").value += a;
   }
 
 var oa = function(args){
     if(stack.length < 1) return
     a = stack.pop()
-    document.getElementById("stackOutput").value += chr(a);
+    document.getElementById("outputTxt").value += chr(a);
   }
 
 var input_number = function(args){
@@ -416,7 +405,7 @@ var execute = function ()
 var codeStep = function()
 {
   instruction = program[pc[0]][pc[1]]
-  if(string_mode && instruction != "\""){
+  if(string_mode && instruction && instruction != "\""){
       push(instruction)
   } else if(instruction in instructions)
   {
@@ -440,7 +429,7 @@ var stepDraw = function(steps)
 }
 
 var draw = function(){
-  drawGrid(ctx, program[0].length * gridSize, program.length * gridSize, gridSize);
+  drawGrid(ctx, program[0].length * gridSize, program.length * gridSize);
   drawContent()
 }
 
@@ -456,25 +445,28 @@ var btnRun = document.getElementById("codeRun");
 var btnStep = document.getElementById("codeStep");
 var txtCode = document.getElementById("codeTxt");
 var txtStack = document.getElementById("stackTxt");
+var txtOutput = document.getElementById("outputTxt");
+
 
 btnClear.addEventListener('click', () => {
+  txtOutput.value = "";
+  clearInterval(interval);
   reset();
   updateHtml();
 });
 
 btnWalk.addEventListener('click', () => {
   walk();
-
 });
 
 btnLoad.addEventListener('click', () => {
   var lines = txtCode.value.split('\n');
-  reset();
+  clearInterval(interval);
   load_program(lines);
-  console.log(program.length);
-  console.log(real_program.length);
-  console.log(program);
-  console.log(real_program);
+  // console.log(program.length);
+  // console.log(real_program.length);
+  // console.log(program);
+  // console.log(real_program);
   updateHtml();
 });
 
@@ -509,7 +501,36 @@ canvas.addEventListener('wheel', function(event)
  event.preventDefault();
 });
 
-var interval;
+let dragStart, dragEnd;
+let drag = false;
+
+canvas.addEventListener('mousedown', canvas_mouseDown);
+canvas.addEventListener('mousemove', canvas_mouseMove);
+canvas.addEventListener('mouseup', canvas_mouseUp);
+
+function canvas_mouseDown(event){
+  dragStart = [event.pageX - canvas.offsetLeft, event.pageY - canvas.offsetTop];
+  drag = true;
+}
+
+function canvas_mouseMove(event){
+  dragEnd = [event.pageX - canvas.offsetLeft, event.pageY - canvas.offsetTop];
+  if(drag)
+    requestAnimationFrame(update);
+}
+
+function canvas_mouseUp(event){
+  drag = false;
+}
+
+function update()
+{
+  cameraPos[0] -= (dragEnd[0] - dragStart[0]);
+  cameraPos[1] -= (dragEnd[1] - dragStart[1]);
+  dragStart = dragEnd;
+  draw();
+}
+
 
 function walk(){
   if(!real_program.length) return;
@@ -521,27 +542,45 @@ function stop(){
   updateHtml();
 }
 
-function fullscreen() {
-    if (!fullWindowState) {
-        fullWindowState = true;
-        //canvas goes full Window
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        canvas.className = "fullscreen"
-        ctx = canvas.getContext('2d');
+function canvas_fullscreen() {
+    var isInFullScreen = (document.fullscreenElement && document.fullscreenElement !== null) ||
+        (document.webkitFullscreenElement && document.webkitFullscreenElement !== null) ||
+        (document.mozFullScreenElement && document.mozFullScreenElement !== null) ||
+        (document.msFullscreenElement && document.msFullscreenElement !== null);
 
-        document.body.scrollTop = 0; // <-- pull the page back up to the top
-        // document.body.style.overflow = 'hidden'; // <-- relevant addition
+    var docElm = canvas;
+    if (!isInFullScreen) {
+        if (docElm.requestFullscreen) {
+            docElm.requestFullscreen();
+        } else if (docElm.mozRequestFullScreen) {
+            docElm.mozRequestFullScreen();
+        } else if (docElm.webkitRequestFullScreen) {
+            docElm.webkitRequestFullScreen();
+        } else if (docElm.msRequestFullscreen) {
+            docElm.msRequestFullscreen();
+        }
     } else {
-        fullWindowState = false;
-        //canvas goes normal
-        canvas.width = 1280;
-        canvas.height = 480;
-        canvas.className = "";
-        ctx = canvas.getContext('2d');
-
-        document.body.style.overflow = 'visible'; // <-- toggle back to normal mode
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
     }
-    draw();
+}
 
+window.onresize = function() {
+  canvas.width = fullWindowState ? window.innerWidth : 1280;
+  canvas.height = fullWindowState ? window.innerHeight : 480;
+  ctx = canvas.getContext('2d');
+  draw();
+}
+
+function fullscreen()
+{
+  fullWindowState = !fullWindowState;
+  canvas_fullscreen();
 }
