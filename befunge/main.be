@@ -3,9 +3,31 @@
                 v                                       v< /r+^[a-zA-Z]$\gPHPABUSERHACKL9jtt>$"   |",,,,               v
                 v           ^                           <|%3  -*3*44g0+46  <$1vgnt0-*3*44g0+46<p0+46+1g0+46            <
   v"TIC TAC TOE"<           ^                  ,+46,"|"  <                    >44*3*5+->#v_"|",64+,266+0g44*3*-\%#v_v
+                                                                                                                  v v
+                                                                                                                  v v#                           < TODO: chequear que player es
+                                                                                                                  v v
+                                                                                                                  v v
   >:#,_64+,              v                                                 ^             <             v"P2 (X): "< >" :(X) 1P",,,,@
-v"[NIGHTMARES] jtt 1vgnt"<                                                                             >:#,_>@&:,67+0p64
->:#,_64+,                   ^
+v"[NIGHTMARES] jtt 1vgnt"<                                                                             >:#,_>&::,67+0p64+,v
+>:#,_64+,                   ^                                                                          v"P2 (Y): "   0    <
+                                                                                                       >:#,_>&::,77+0p64+,>:4\`#v_               ^ @ es mayor a 3
+                                                                                                                                >0`#v_           ^ @ es menor a 0
+                                                                                                                          ^        $<
+
+
+
+
+
+
+x - 2 == 0  | x - 1 == 0 | x == 0
+
+
+
+
+
+                           v       v
+                         py< carga >px
+                         x
 
 
 v_,#:<"P2 (Y): "<

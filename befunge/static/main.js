@@ -263,13 +263,9 @@ var oa = function(args){
   }
 
 var input_number = function(args){
-    try
-    {
-      a = parseInt(prompt("Enter a number: "));
-      stack.push(a)
-    } catch {
-      console.log("error en input_number");
-    }
+    a = parseInt(prompt("Enter a number: "));
+    if(!a) a = 0;
+    stack.push(a);
 }
 
 var ord = function(a){
@@ -281,13 +277,8 @@ var chr = function(a){
 }
 
 var input_ascii = function(args){
-    try{
-        a = ord(prompt("Enter a number: "))
-        stack.push(a)
-    } catch
-    {
-      console.log("error en input_ascii");
-    }
+  a = ord(prompt("Enter a number: "))
+  stack.push(a)
 }
 
 var end = function(args){
