@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <title>Befunge</title>
@@ -7,9 +8,197 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.0.2/dist/darkly/bootstrap.min.css">
   <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
+  <!-- Modal -->
+  <div class="modal fade" id="modalCheatSheet" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Befunge CheatSheet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-dark table-striped table-hover table-bordered">
+              <tr>
+                <th>Cmd
+                </th>
+                <th>Description
+                </th>
+              </tr>
+              <tr>
+                <td class="text-center"><code>+</code>
+                </td>
+                <td class="text-center">Addition: Pop two values a and b, then push the result of a+b
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>-</code>
+                </td>
+                <td class="text-center">Subtraction: Pop two values a and b, then push the result of b-a
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>*</code>
+                </td>
+                <td class="text-center">Multiplication: Pop two values a and b, then push the result of a*b
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>/</code>
+                </td>
+                <td class="text-center">Integer division: Pop two values a and b, then push the result of b/a, rounded down. According to the specifications, if a is zero, ask the user what result they want.
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>%</code>
+                </td>
+                <td class="text-center">Modulo: Pop two values a and b, then push the remainder of the integer division of b/a.
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>!</code>
+                </td>
+                <td class="text-center">Logical NOT: Pop a value. If the value is zero, push 1; otherwise, push zero.
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>`</code>
+                </td>
+                <td class="text-center">Greater than: Pop two values a and b, then push 1 if b&gt;a, otherwise zero.
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>&gt;</code>
+                </td>
+                <td class="text-center">PC direction right
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>&lt;</code>
+                </td>
+                <td class="text-center">PC direction left
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>^</code>
+                </td>
+                <td class="text-center">PC direction up
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>v</code>
+                </td>
+                <td class="text-center">PC direction down
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>?</code>
+                </td>
+                <td class="text-center">Random PC direction
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>_</code>
+                </td>
+                <td class="text-center">Horizontal IF: pop a value; set direction to right if value=0, set to left otherwise
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>|</code>
+                </td>
+                <td class="text-center">Vertical IF: pop a value; set direction to down if value=0, set to up otherwise
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>"</code>
+                </td>
+                <td class="text-center">Toggle stringmode (push each character's ASCII value all the way up to the next <code>"</code>)
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>:</code>
+                </td>
+                <td class="text-center">Duplicate top stack value
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>\</code>
+                </td>
+                <td class="text-center">Swap top stack values
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>$</code>
+                </td>
+                <td class="text-center">Pop (remove) top stack value and discard
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>.</code>
+                </td>
+                <td class="text-center">Pop top of stack and output as integer
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>,</code>
+                </td>
+                <td class="text-center">Pop top of stack and output as ASCII character
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>#</code>
+                </td>
+                <td class="text-center">Bridge: jump over next command in the current direction of the current PC
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>g</code>
+                </td>
+                <td class="text-center">A "get" call (a way to retrieve data in storage). Pop two values y and x, then push the ASCII value of the character at that position in the program. If (x,y) is out of bounds, push 0
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>p</code>
+                </td>
+                <td class="text-center">A "put" call (a way to store a value for later use). Pop three values y, x and v, then change the character at the position (x,y) in the program to the character with ASCII value v
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>&amp;</code>
+                </td>
+                <td class="text-center">Get integer from user and push it
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>~</code>
+                </td>
+                <td class="text-center">Get character from user and push it
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>@</code>
+                </td>
+                <td class="text-center">End program
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center"><code>0</code> – <code>9</code>
+                </td>
+                <td class="text-center">Push corresponding number onto the stack
+                </td>
+              </tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
-    <h1 class="text-center" >Befunge Interpreter</h1>
+    <h1 class="text-center">Befunge Interpreter</h1>
     <div class="row mb-2">
       <div class="col2">
         <canvas id="canvas" width="1280" height="480"></canvas>
@@ -17,21 +206,36 @@
     </div>
 
     <div class="row mb-2">
-        <div class="col-md-2 mb-3">
-          <button type="button" class="btn w-100 btn-warning" id="codeClear">Clear</button>
+      <div class="col-md-2 mb-3">
+        <button type="button" class="btn w-100 btn-warning" id="codeClear">Clear</button>
+      </div>
+      <div class="col-md-2 mb-3">
+        <button type="button" class="btn w-100 btn-success" id="codeLoad">Load Program</button>
+      </div>
+      <div class="col-md-2 mb-3">
+        <button type="button" class="btn w-100 btn-primary" id="codeRun">Run</button>
+      </div>
+      <div class="col-md-2 mb-3">
+        <button type="button" class="btn w-100 btn-info" id="codeStep">Step</button>
+      </div>
+      <div class="col-md-2 mb-3">
+        <button type="button" class="btn w-100 btn-danger" id="codeWalk">Walk</button>
+      </div>
+      <div class="col-md-2 mb-3">
+        <button type="button" class="btn w-100 btn-secondary" id="codeStop">Stop</button>
+      </div>
+      <div class="col-md-2 mb-3">
+        <button type="button" class="btn w-100 btn-secondary" id="codeRewind">Rewind</button>
+      </div>
+    </div>
+
+    <div class="row mb-2">
+      <div class="col">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="cbFollow" checked>
+          <label for="cbFollow" class='form-check-label'>Lock camera</label>
         </div>
-        <div class="col-md-2 mb-3">
-          <button type="button" class="btn w-100 btn-success" id="codeLoad">Load Program</button>
-        </div>
-        <div class="col-md-2 mb-3">
-          <button type="button" class="btn w-100 btn-primary" id="codeRun">Run</button>
-        </div>
-        <div class="col-md-2 mb-3">
-          <button type="button" class="btn w-100 btn-danger" id="codeStep">Step</button>
-        </div>
-        <div class="col-md mb-3">
-          <button type="button" class="btn w-100 btn-danger" id="codeWalk">Walk</button>
-        </div>
+      </div>
     </div>
 
     <div class="row mb-2">
@@ -58,9 +262,13 @@
 
 
 
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+  </div>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
   <script type="text/javascript" src="/static/main.js"></script>
+
 </body>
+
 </html>

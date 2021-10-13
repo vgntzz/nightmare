@@ -4,6 +4,12 @@ let gridSize = 24;
 let cameraPos = [25,25]
 let mouseX = 0;
 let mouseY = 0;
+let dragStart, dragEnd;
+let drag = false;
+let fullWindowState = false;
+
+let edit_mode = true;
+let selected_cell = [-1, -1];
 
 // ==================
 // Befunge Program
@@ -24,6 +30,8 @@ let string_mode = false
 let program_finished = false
 let debug = false
 let interval;
+
+let should_follow = true;
 
 var drawGrid = function(ctx, w, h) {
     w = Math.floor(w / gridSize) * gridSize;
@@ -49,31 +57,49 @@ var drawGrid = function(ctx, w, h) {
         ctx.lineTo(w-cameraPos[0], y-cameraPos[1]);
     }
     ctx.stroke();
+
     if(real_program.length){
       ctx.fillStyle = 'rgb(0,0,255)';
       ctx.globalAlpha = 0.6;
       ctx.fillRect(pc[1]*gridSize-cameraPos[0],pc[0]*gridSize-cameraPos[1],gridSize,gridSize);
       ctx.globalAlpha = 1.0;
     }
+
+    if(edit_mode && selected_cell[0] != -1)
+    {
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = "rgb(0,255,0)";
+      ctx.fillRect(selected_cell[0] * gridSize - cameraPos[0], selected_cell[1] * gridSize - cameraPos[1], gridSize, gridSize);
+      ctx.globalAlpha = 1;
+    }
+
+
     ctx.fillStyle = 'rgb(0,0,0)';
 };
 
+let speed = 25;
+
 document.addEventListener('keydown', function (event) {
   if(event.target.nodeName.toLowerCase() === 'textarea') return;
-  let speed = 25;
+
+  if (event.keyCode === 9) { // tab
+    $('#modalCheatSheet').modal('toggle');
+    event.preventDefault();
+  }
+  if($('#modalCheatSheet').hasClass('show')) return;
 
   if(event.key == "f")
-    fullscreen();
+    canvas_fullscreen();
 
   if(event.key == "q")
     stepDraw(1);
 
   if (event.keyCode === 32) { // spacebar
-    cameraPos[0] = pc[1] * gridSize + Math.round(gridSize/2) - Math.round(canvas.width / 2);
-    cameraPos[1] = pc[0] * gridSize + Math.round(gridSize/2) - Math.round(canvas.height / 2);
+    centerToActiveCell();
     draw();
     event.preventDefault();
   }
+
 
   if (event.keyCode === 39) { // right arrow
     cameraPos[0] += speed;
@@ -127,6 +153,9 @@ var reset = function()
     string_mode = false
     program_finished = false
     debug = false
+    currentSteps = 0;
+    centerToActiveCell();
+    clearInterval(interval);
 }
 
 var load_program = function(lines){
@@ -399,11 +428,12 @@ var execute = function ()
 {
     while(!program_finished)
       codeStep();
-    console.log(stack);
 }
 
 var codeStep = function()
 {
+  if(!real_program.length) return;
+  if(program_finished) return;
   instruction = program[pc[0]][pc[1]]
   if(string_mode && instruction && instruction != "\""){
       push(instruction)
@@ -413,9 +443,22 @@ var codeStep = function()
       instruction_func = instructions[instruction]
       instruction_func(instruction)
   }
-  currentSteps++;
+
+
   if(!program_finished)
+  {
     next_step()
+    currentSteps++;
+    if(should_follow)
+      centerToActiveCell();
+  }
+
+}
+
+var centerToActiveCell = function()
+{
+  cameraPos[0] = pc[1] * gridSize + Math.round(gridSize/2) - Math.round(canvas.width / 2);
+  cameraPos[1] = pc[0] * gridSize + Math.round(gridSize/2) - Math.round(canvas.height / 2);
 }
 
 var stepDraw = function(steps)
@@ -425,7 +468,6 @@ var stepDraw = function(steps)
       codeStep();
     }
     updateHtml();
-    console.log(currentSteps);
 }
 
 var draw = function(){
@@ -438,53 +480,62 @@ var updateHtml = function(){
   draw();
 }
 
-var btnClear = document.getElementById("codeClear");
-var btnWalk = document.getElementById("codeWalk");
-var btnLoad = document.getElementById("codeLoad");
-var btnRun = document.getElementById("codeRun");
-var btnStep = document.getElementById("codeStep");
-var txtCode = document.getElementById("codeTxt");
-var txtStack = document.getElementById("stackTxt");
-var txtOutput = document.getElementById("outputTxt");
+var rewind = function(){
+  if(!real_program.length) return;
+  if(currentSteps - 1 < 0) return;
+  targetSteps = currentSteps - 1;
+  clear();
+  load();
+  stepDraw(targetSteps);
 
+}
 
-btnClear.addEventListener('click', () => {
+var clear = function()
+{
   txtOutput.value = "";
-  clearInterval(interval);
   reset();
   updateHtml();
-});
+}
 
-btnWalk.addEventListener('click', () => {
-  walk();
-});
-
-btnLoad.addEventListener('click', () => {
+var load = function(){
+  if(!txtCode.value) return;
   var lines = txtCode.value.split('\n');
-  clearInterval(interval);
+  clear();
   load_program(lines);
   // console.log(program.length);
   // console.log(real_program.length);
   // console.log(program);
   // console.log(real_program);
   updateHtml();
-});
+}
+
+var btnClear = document.getElementById("codeClear");
+var btnWalk = document.getElementById("codeWalk");
+var btnRewind = document.getElementById("codeRewind");
+var btnStop = document.getElementById("codeStop");
+var btnLoad = document.getElementById("codeLoad");
+var btnRun = document.getElementById("codeRun");
+var btnStep = document.getElementById("codeStep");
+var txtCode = document.getElementById("codeTxt");
+var txtStack = document.getElementById("stackTxt");
+var txtOutput = document.getElementById("outputTxt");
+var cbFollow = document.getElementById("cbFollow");
+
+cbFollow.addEventListener('click', () => {should_follow = cbFollow.checked;});
+btnClear.addEventListener('click', clear);
+btnWalk.addEventListener('click', walk);
+btnStop.addEventListener('click', stop);
+btnRewind.addEventListener('click', rewind);
+btnLoad.addEventListener('click', load);
 
 btnRun.addEventListener('click', () => {
-  console.log(real_program);
   if(!real_program.length) return;
   execute();
   updateHtml();
 });
 
-btnStep.addEventListener('click', () => {
-  console.log(real_program);
-  if(!real_program.length) return;
-  codeStep();
-  updateHtml();
-});
+btnStep.addEventListener('click', () => stepDraw(1));
 
-let fullWindowState = false;
 
 canvas.addEventListener('wheel', function(event)
 {
@@ -501,12 +552,20 @@ canvas.addEventListener('wheel', function(event)
  event.preventDefault();
 });
 
-let dragStart, dragEnd;
-let drag = false;
 
+
+canvas.addEventListener('mouseleave', canvas_mouseUp);
 canvas.addEventListener('mousedown', canvas_mouseDown);
 canvas.addEventListener('mousemove', canvas_mouseMove);
 canvas.addEventListener('mouseup', canvas_mouseUp);
+
+function getMouseWorld(){
+  var rect = canvas.getBoundingClientRect();
+  let mouse = [(event.clientX - rect.left) / (rect.right - rect.left) * canvas.width, (event.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height];
+  mouse[0] = cameraPos[0] + mouse[0];
+  mouse[1] = cameraPos[1] + mouse[1];
+  return mouse;
+}
 
 function canvas_mouseDown(event){
   dragStart = [event.pageX - canvas.offsetLeft, event.pageY - canvas.offsetTop];
@@ -521,6 +580,16 @@ function canvas_mouseMove(event){
 
 function canvas_mouseUp(event){
   drag = false;
+  if(edit_mode)
+  {
+    let mouse = getMouseWorld();
+    tileX = Math.floor(mouse[0] / gridSize);
+    tileY = Math.floor(mouse[1] / gridSize);
+    if(tileX < 0 || tileX >= program[0].length || tileY < 0 || tileY >= program.length){selected_cell = [-1,-1]; return;};
+    console.log(tileX + ":" + tileY);
+    selected_cell = [tileX, tileY];
+    draw();
+  }
 }
 
 function update()
@@ -534,7 +603,8 @@ function update()
 
 function walk(){
   if(!real_program.length) return;
-  interval = setInterval(() => {codeStep(); updateHtml();}, 10);
+  clearInterval(interval);
+  interval = setInterval(() => {codeStep(); updateHtml(); if(program_finished){clearInterval(interval);} }, 10);
 }
 
 function stop(){
@@ -573,14 +643,10 @@ function canvas_fullscreen() {
 }
 
 window.onresize = function() {
+  fullWindowState = window.innerHeight == screen.height
   canvas.width = fullWindowState ? window.innerWidth : 1280;
   canvas.height = fullWindowState ? window.innerHeight : 480;
   ctx = canvas.getContext('2d');
+  centerToActiveCell();
   draw();
-}
-
-function fullscreen()
-{
-  fullWindowState = !fullWindowState;
-  canvas_fullscreen();
 }
