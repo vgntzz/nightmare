@@ -15,6 +15,7 @@ let pc = [0, 0]
 let step = [0, 1]
 let program = new Array(SIZE_PROGRAM[0]);
 let real_program = [];
+let currentSteps = 0;
 for(var i=0; i<SIZE_PROGRAM[0]; i++) {
     program[i] = new Array(SIZE_PROGRAM[1]);
 }
@@ -64,9 +65,11 @@ document.addEventListener('keydown', function (event) {
   if(event.target.nodeName.toLowerCase() === 'textarea') return;
   let speed = 25;
 
-  if(event.key == "f"){
+  if(event.key == "f")
     fullscreen();
-  }
+
+  if(event.key == "q")
+    stepDraw(1);
 
   if (event.keyCode === 39) { // right arrow
     cameraPos[0] += speed;
@@ -213,8 +216,8 @@ var gt = function(args){
   }
 
 var dup = function(args){
-    if(stack.length < 1) return
-    a = stack[-1]
+    if(stack.length < 1) return;
+    a = stack[stack.length-1]
     stack.push(a)
   }
 
@@ -232,13 +235,13 @@ var nop = function(args){
 var oi = function(args){
     if(stack.length < 1) return
     a = stack.pop()
-    // console.log(a, end=" ")
+    document.getElementById("stackOutput").value += a;
   }
 
 var oa = function(args){
     if(stack.length < 1) return
     a = stack.pop()
-    // console.log(chr(a), end=" ")
+    document.getElementById("stackOutput").value += chr(a);
   }
 
 var input_number = function(args){
@@ -310,7 +313,8 @@ var bridge = function(args){
   }
 
 var horizontal_if = function(args){
-    a = stack.length > 0 ? stack.pop() : 0
+  // if(stack.length < 1) return;
+    a = stack.length > 0 ? stack.pop() : 0;
     if(!a){
         move(">")
         return
@@ -412,7 +416,7 @@ var execute = function ()
 var codeStep = function()
 {
   instruction = program[pc[0]][pc[1]]
-  if(string_mode && !instruction == "\""){
+  if(string_mode && instruction != "\""){
       push(instruction)
   } else if(instruction in instructions)
   {
@@ -420,8 +424,19 @@ var codeStep = function()
       instruction_func = instructions[instruction]
       instruction_func(instruction)
   }
+  currentSteps++;
   if(!program_finished)
     next_step()
+}
+
+var stepDraw = function(steps)
+{
+    for (var i = 0; i < steps; i++)
+    {
+      codeStep();
+    }
+    updateHtml();
+    console.log(currentSteps);
 }
 
 var draw = function(){
