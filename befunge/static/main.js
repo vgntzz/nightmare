@@ -8,7 +8,7 @@ let dragStart, dragEnd;
 let drag = false;
 let fullWindowState = false;
 
-let edit_mode = true;
+let edit_mode = false;
 let selected_cell = [-1, -1];
 
 // ==================
