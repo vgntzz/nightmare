@@ -1,7 +1,7 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext('2d');
-let gridSize = 24;
-let cameraPos = [25,25]
+let gridSize = 32;
+let cameraPos = [0,0];
 let mouseX = 0;
 let mouseY = 0;
 let dragStart, dragEnd;
@@ -14,8 +14,9 @@ let selected_cell = [-1, -1];
 // ==================
 // Befunge Program
 // ==================
-SIZE_PROGRAM = [50, 50]
-
+SIZE_PROGRAM = [10, 10]
+cameraPos = [SIZE_PROGRAM[0]*gridSize/2 - canvas.width/2, SIZE_PROGRAM[1]*gridSize/2 - canvas.height/2];
+let wasPrompt = false;
 let stack = []
 let pc = [0, 0]
 let step = [0, 1]
@@ -127,12 +128,16 @@ document.addEventListener('keydown', function (event) {
 var drawContent = function(){
   ctx.font = `${gridSize-2}px Calibri`;
   ctx.fillStyle = "rgb(255,255,255)";
+  var height = parseInt(ctx.font.match(/\d+/), 10);
   for (var i = 0; i < real_program.length; i++) {
+    pos_y = (gridSize * i + gridSize) - height/4;
+    if(gridSize*i+gridSize < cameraPos[1] || gridSize*i > cameraPos[1] + canvas.height) continue;
     for (var j = 0; j < real_program[i].length; j++) {
       var width = ctx.measureText(real_program[i][j]).width;
-      var height = parseInt(ctx.font.match(/\d+/), 10);
       pos_x = (gridSize * j + gridSize/2) - width/2;
-      pos_y = (gridSize * i + gridSize) - height/4;
+      if(gridSize*j+gridSize < cameraPos[0] || gridSize*j > cameraPos[0] + canvas.width) continue;
+      if(real_program[i][j] == " ") continue;
+      // console.log("DRAWING: " + i + " J: " + j);
       ctx.fillText(real_program[i][j], pos_x - cameraPos[0], pos_y - cameraPos[1]);
     }
   }
@@ -142,6 +147,7 @@ drawGrid(ctx, program[0].length * gridSize, program.length * gridSize);
 
 var reset = function()
 {
+    wasPrompt = false;
     stack = []
     pc = [0, 0]
     step = [0, 1]
@@ -253,17 +259,27 @@ var nop = function(args){
 var oi = function(args){
     if(stack.length < 1) return
     a = stack.pop()
-    document.getElementById("outputTxt").value += a;
+    output = document.getElementById("outputTxt");
+    output.value += a;
+    output.scrollTop = output.scrollHeight;
   }
 
 var oa = function(args){
     if(stack.length < 1) return
     a = stack.pop()
-    document.getElementById("outputTxt").value += chr(a);
+    output = document.getElementById("outputTxt");
+    output.value += chr(a);
+    output.scrollTop = output.scrollHeight;
   }
 
+function isInt(value) {
+  return !isNaN(value) && (function(x) { return (x | 0) === x; })(parseFloat(value))
+}
+
 var input_number = function(args){
-    a = parseInt(prompt("Enter a number: "));
+    while(!isInt(a = prompt("Enter an integer number: ")));
+    a = parseInt(a);
+    wasPrompt = true;
     if(!a) a = 0;
     stack.push(a);
 }
@@ -277,8 +293,10 @@ var chr = function(a){
 }
 
 var input_ascii = function(args){
-  a = ord(prompt("Enter a number: "))
-  stack.push(a)
+  a = prompt("Enter an ascii value: ");
+  if(a == null || !a.length) return;
+  wasPrompt = true;
+  stack.push(ord(a))
 }
 
 var end = function(args){
@@ -343,7 +361,7 @@ var vertical_if = function(args){
 
 var get = function(args){
     if(stack.length < 2) return
-    [a, b] = pop_two()
+    [a, b] = pop_two() // a = row, b == col
     if(a >= real_program.length) a = real_program.length-1
     if(b >= real_program[a].length) b = real_program[a].length - 1
     instruction = program[a][b]
@@ -417,8 +435,12 @@ var next_step = function(){
 
 var execute = function ()
 {
-    while(!program_finished)
+    // while(!program_finished)
+    //   codeStep();
+    while(!wasPrompt && !program_finished)
       codeStep();
+    updateHtml();
+    wasPrompt = false;
 }
 
 var codeStep = function()
@@ -468,6 +490,7 @@ var draw = function(){
 
 var updateHtml = function(){
   txtStack.value = stack.join(" ");
+  txtStack.dispatchEvent(new Event("change"));
   draw();
 }
 
@@ -511,6 +534,10 @@ var txtCode = document.getElementById("codeTxt");
 var txtStack = document.getElementById("stackTxt");
 var txtOutput = document.getElementById("outputTxt");
 var cbFollow = document.getElementById("cbFollow");
+
+txtStack.addEventListener('change', () => {
+  // $("#stackTxt").attr("rows", );
+})
 
 cbFollow.addEventListener('click', () => {should_follow = cbFollow.checked;});
 btnClear.addEventListener('click', clear);
